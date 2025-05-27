@@ -41,7 +41,7 @@ class App extends PortableApplication(800, 800) {
           case State.DEAD => Color.BLACK
           case _ => Color.GRAY
         }
-      g.drawFilledRectangle(ox + x * size, oy + y * size, size, size, 0f, color)
+        g.drawFilledRectangle(ox + x * size, oy + y * size, size, size, 0f, color)
       })
     })
 

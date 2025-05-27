@@ -29,13 +29,7 @@ object World {
   def make(width: Int, height: Int): World = {
     val grid: List[List[Cell]] = (
       for (y <- 0 until height) yield (
-        for (x <- 0 until width) yield Cell(
-          if (Math.random() < 0.01) {
-            State.FIRE
-          } else {
-            State.ALIVE
-          }
-        )
+        for (x <- 0 until width) yield Cell.random()
       ).toList
     ).toList
 
