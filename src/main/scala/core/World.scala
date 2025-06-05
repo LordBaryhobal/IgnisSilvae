@@ -1,6 +1,9 @@
 package core
 
 import core.World.dirFromOffset
+import noise.OpenSimplexNoise
+
+import scala.util.Random
 
 case class World(grid: List[List[Cell]], width: Int, height: Int) {
   def getNeighbors(x: Int, y: Int): List[(Int, Cell)] = {
@@ -67,9 +70,21 @@ object World {
   )
 
   def make(width: Int, height: Int): World = {
+    val random: Random = new Random()
+    val seed: Long = random.nextLong()
+    val noise: OpenSimplexNoise = new OpenSimplexNoise(seed)
+    println(s"Seed: $seed")
+    val FEATURE_SIZE: Double = 24.0
     val grid: List[List[Cell]] = (
       for (y <- 0 until height) yield (
-        for (x <- 0 until width) yield Cell.random()
+        for (x <- 0 until width) yield {
+          val value: Double = noise.eval(x / FEATURE_SIZE, y / FEATURE_SIZE, 0.0)
+          if (value > -0.4) {
+            Cell.random()
+          } else {
+            Cell(State.WATER, Cell.Properties(0, 0, 1))
+          }
+        }
       ).toList
     ).toList
 

@@ -113,6 +113,7 @@ class App extends PortableApplication(800, 800) {
           case State.ALIVE => Color.GREEN
           case State.FIRE => Color.ORANGE
           case State.DEAD => Color.BLACK
+          case State.WATER => Color.BLUE
           case _ => Color.GRAY
         }
       }
@@ -121,6 +122,7 @@ class App extends PortableApplication(800, 800) {
           case State.ALIVE => Color.GREEN
           case State.FIRE => Color.ORANGE
           case State.DEAD => Color.BLACK
+          case State.WATER => Color.BLUE
           case _ => Color.GRAY
         }
       }
