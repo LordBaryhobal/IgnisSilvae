@@ -10,7 +10,8 @@ import core.{Cell, Settings, State, World}
 import org.lwjgl.opengl.Display
 import visual.Layer.Layer
 
-import java.io.{FileOutputStream, PrintWriter}
+import java.io.{FileOutputStream, OutputStream, PrintWriter}
+import java.net.Socket
 import java.nio.ByteBuffer
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -30,12 +31,24 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
   private var layer: Layer = Layer.STATE
   private val fireDensity: ArrayBuffer[Double] = new ArrayBuffer[Double]()
   private val burnFrequency: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
+  private val socket: Option[Socket] = if (Settings.SOCKET_ENABLED) Some(
+    new Socket(Settings.SOCKET_HOST, Settings.SOCKET_PORT)
+  ) else None
+  private val socketOut: Option[OutputStream] = if (Settings.SOCKET_ENABLED) Some(socket.get.getOutputStream) else None
+  private var step: Int = 0
   private var fast: Boolean = false
   logFireDensity()
 
   override def onInit(): Unit = {
     setTitle(TITLE)
     setIcons(iconSizes.map((size: Int) => s"res/icon_$size.png"))
+  }
+
+  override def exit(): Unit = {
+    if (Settings.SOCKET_ENABLED) {
+      socket.get.close()
+    }
+    super.exit()
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
@@ -81,6 +94,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
         })
       })
       logFireDensity()
+      step += 1
     }
 
     i += 1
@@ -166,6 +180,14 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
   def logFireDensity(): Unit = {
     val density: Double = world.getFireDensity
     fireDensity.addOne(density)
+
+    if (Settings.SOCKET_ENABLED) {
+      val buf: ByteBuffer = ByteBuffer.allocateDirect(12).putInt(step).putDouble(density).flip()
+      val arr: Array[Byte] = Array.fill(12)(0)
+      buf.get(arr)
+      socketOut.get.write(arr)
+      socketOut.get.flush()
+    }
   }
 
   def exportStats(): Unit = {
