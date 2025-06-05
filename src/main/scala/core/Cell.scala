@@ -3,18 +3,18 @@ package core
 import core.Cell.Properties
 import core.State.State
 
-case class Cell(state: State, properties: Properties) {
+case class Cell(state: State, properties: Properties, timesBurnt: Int = 0) {
   def step(neighbors: List[(Int, Cell)]): Cell = {
     val props2: Properties = neighbors.foldLeft(getBaseProperties)(influenceProps)
 
     state match {
       case State.ALIVE if Math.random() < props2.fireProbability =>
-        Cell(State.FIRE, Properties(0, 0, props2.humidity))
+        Cell(State.FIRE, Properties(0, 0, props2.humidity), timesBurnt + 1)
       case State.FIRE =>
-        Cell(State.DEAD, Properties(0, props2.growthProbability, props2.humidity))
+        Cell(State.DEAD, Properties(0, props2.growthProbability, props2.humidity), timesBurnt)
       case State.DEAD if Math.random() < props2.growthProbability =>
-        Cell(State.ALIVE, Properties(props2.fireProbability, 0, props2.humidity))
-      case _ => Cell(state, props2)
+        Cell(State.ALIVE, Properties(props2.fireProbability, 0, props2.humidity), timesBurnt)
+      case _ => Cell(state, props2, timesBurnt)
     }
   }
 

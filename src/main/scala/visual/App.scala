@@ -27,8 +27,9 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
 
   private var world: World = World.make(Settings.WORLD_WIDTH, Settings.WORLD_HEIGHT)
   private var i: Int = 1
-  private var layer: Layer = Layer.ALL
+  private var layer: Layer = Layer.STATE
   private val fireDensity: ArrayBuffer[Double] = new ArrayBuffer[Double]()
+  private val burnFrequency: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
   logFireDensity()
 
   override def onInit(): Unit = {
@@ -47,15 +48,15 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
       val y: Int = p1._2
       p1._1.zipWithIndex.foreach(p2 => {
         val x: Int = p2._2
-        val color: Color = getCellColor(p2._1)
+        val color: Color = getCellColor(p2._1, x, y)
         val texture: Texture = getColorTexture(color)
         g.draw(texture, ox + x * size, oy + y * size)
       })
     })
 
     g.drawString(0f, 800f, "Layer: " + (layer match {
-      case Layer.ALL => "All"
       case Layer.STATE => "State"
+      case Layer.TIMES_BURNT => "Burn frequency"
       case Layer.FIRE_PROBABILITY => "Fire probability"
       case Layer.GROWTH_PROBABILITY => "Growth probability"
       case Layer.HUMIDITY => "Humidity"
@@ -66,6 +67,18 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
     if (i == 0) {
       world = world.step()
       world.printStats()
+      val maxBurns: Double = world.grid.foldLeft(0)((max, row) => {
+        row.foldLeft(max)((max2, cell) => {
+          math.max(max2, cell.timesBurnt)
+        })
+      })
+      world.grid.zipWithIndex.foreach(p1 => {
+        val y: Int = p1._2
+        p1._1.zipWithIndex.foreach(p2 => {
+          val x: Int = p2._2
+          burnFrequency(y)(x) = p2._1.timesBurnt / maxBurns
+        })
+      })
       logFireDensity()
     }
 
@@ -106,17 +119,8 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
     }
   }
 
-  def getCellColor(cell: Cell): Color = {
+  def getCellColor(cell: Cell, x: Int, y: Int): Color = {
     layer match {
-      case Layer.ALL => {
-        cell.state match {
-          case State.ALIVE => Color.GREEN
-          case State.FIRE => Color.ORANGE
-          case State.DEAD => Color.BLACK
-          case State.WATER => Color.BLUE
-          case _ => Color.GRAY
-        }
-      }
       case Layer.STATE => {
         cell.state match {
           case State.ALIVE => Color.GREEN
@@ -126,21 +130,31 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
           case _ => Color.GRAY
         }
       }
+      case Layer.TIMES_BURNT => {
+        cell.state match {
+          case State.WATER => Color.BLUE
+          case _ => lerpColor(Color.GREEN, Color.RED, burnFrequency(y)(x))
+        }
+      }
       case Layer.FIRE_PROBABILITY => {
-        Color.GREEN.cpy().lerp(Color.RED, cell.properties.fireProbability.toFloat)
+        lerpColor(Color.GREEN, Color.RED, cell.properties.fireProbability)
       }
       case Layer.GROWTH_PROBABILITY => {
-        Color.GRAY.cpy().lerp(Color.GREEN, cell.properties.growthProbability.toFloat)
+        lerpColor(Color.GRAY, Color.GREEN, cell.properties.growthProbability)
       }
       case Layer.HUMIDITY => {
-        Color.WHITE.cpy().lerp(Color.BLUE, cell.properties.humidity.toFloat)
+        lerpColor(Color.WHITE, Color.BLUE, cell.properties.humidity)
       }
     }
   }
 
+  private def lerpColor(color1: Color, color2: Color, value: Double): Color = {
+    color1.cpy().lerp(color2, math.round(value * 100).toFloat / 100)
+  }
+
   override def onKeyDown(keycode: Int): Unit = {
-    if (keycode == Keys.NUM_1 || keycode == Keys.A) {layer = Layer.ALL}
-    else if (keycode == Keys.NUM_2 || keycode == Keys.S) {layer = Layer.STATE}
+    if (keycode == Keys.NUM_1 || keycode == Keys.S) {layer = Layer.STATE}
+    else if (keycode == Keys.NUM_2 || keycode == Keys.B) {layer = Layer.TIMES_BURNT}
     else if (keycode == Keys.NUM_3 || keycode == Keys.F) {layer = Layer.FIRE_PROBABILITY}
     else if (keycode == Keys.NUM_4 || keycode == Keys.G) {layer = Layer.GROWTH_PROBABILITY}
     else if (keycode == Keys.NUM_5 || keycode == Keys.H) {layer = Layer.HUMIDITY}
