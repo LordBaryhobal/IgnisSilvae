@@ -1,6 +1,26 @@
 package core
 
 object Settings {
+  // +--------------+
+  // |  Generation  |
+  // +--------------+
+
+  /** World width */
+  val WORLD_WIDTH: Int = 100
+
+  /** World height */
+  val WORLD_HEIGHT: Int = 100
+
+  /** OpenSimplex noise feature size */
+  val SIMPLEX_FEATURE_SIZE: Double = 24.0
+
+  /** Maximum noise value for water to generate */
+  val WATER_THRESHOLD: Double = 0.2
+
+  // +--------------+
+  // |  Simulation  |
+  // +--------------+
+
   /** Fire probability decrease as a ratio of current humidity */
   val BASE_HUMIDITY_FIRE_DECREASE: Double = 0.5
 
@@ -18,4 +38,20 @@ object Settings {
 
   /** Additional humidity increase per water neighbor */
   val NB_WATER_HUMIDITY_INCREASE: Double = 0.2
+
+  // +-----------------+
+  // |  Miscellaneous  |
+  // +-----------------+
+
+  /** Size of a cell in pixel */
+  val CELL_SIZE: Int = 4
+
+  /** Whether to connect to the Python plotting socket */
+  val SOCKET_ENABLED: Boolean = false
+
+  /** Host of the Python plotting socket */
+  val SOCKET_HOST: String = ""
+
+  /** Port of the Python plotting socket */
+  val SOCKET_PORT: Int = 63610
 }

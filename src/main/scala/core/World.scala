@@ -50,9 +50,9 @@ case class World(grid: List[List[Cell]], width: Int, height: Int) {
       }
     }
 
-    println(s"Mean fire probability: ${stats.fire / stats.cnt * 100} %")
-    println(s"Mean growth probability: ${stats.growth / stats.cnt * 100} %")
-    println(s"Mean humidity: ${stats.humidity / stats.cnt * 100} %")
+    //println(s"Mean fire probability: ${stats.fire / stats.cnt * 100} %")
+    //println(s"Mean growth probability: ${stats.growth / stats.cnt * 100} %")
+    //println(s"Mean humidity: ${stats.humidity / stats.cnt * 100} %")
   }
 }
 
@@ -74,12 +74,15 @@ object World {
     val seed: Long = random.nextLong()
     val noise: OpenSimplexNoise = new OpenSimplexNoise(seed)
     println(s"Seed: $seed")
-    val FEATURE_SIZE: Double = 24.0
     val grid: List[List[Cell]] = (
       for (y <- 0 until height) yield (
         for (x <- 0 until width) yield {
-          val value: Double = noise.eval(x / FEATURE_SIZE, y / FEATURE_SIZE, 0.0)
-          if (value > -0.4) {
+          val value: Double = (noise.eval(
+            x / Settings.SIMPLEX_FEATURE_SIZE,
+            y / Settings.SIMPLEX_FEATURE_SIZE,
+            0.0
+          ) + 1) / 2
+          if (value > Settings.WATER_THRESHOLD) {
             Cell.random()
           } else {
             Cell(State.WATER, Cell.Properties(0, 0, 1))
