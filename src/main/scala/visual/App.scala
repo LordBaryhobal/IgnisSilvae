@@ -30,6 +30,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
   private var layer: Layer = Layer.STATE
   private val fireDensity: ArrayBuffer[Double] = new ArrayBuffer[Double]()
   private val burnFrequency: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
+  private var fast: Boolean = false
   logFireDensity()
 
   override def onInit(): Unit = {
@@ -64,7 +65,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
 
     g.drawFPS()
 
-    if (i == 0) {
+    if (i == 0 || fast) {
       world = world.step()
       world.printStats()
       val maxBurns: Double = world.grid.foldLeft(0)((max, row) => {
@@ -159,6 +160,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
     else if (keycode == Keys.NUM_4 || keycode == Keys.G) {layer = Layer.GROWTH_PROBABILITY}
     else if (keycode == Keys.NUM_5 || keycode == Keys.H) {layer = Layer.HUMIDITY}
     else if (keycode == Keys.E) {exportStats()}
+    else if (keycode == Keys.SPACE) {fast = !fast}
   }
 
   def logFireDensity(): Unit = {
