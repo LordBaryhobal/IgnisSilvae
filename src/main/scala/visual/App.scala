@@ -31,6 +31,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
   private var layer: Layer = Layer.STATE
   private val fireDensity: ArrayBuffer[Double] = new ArrayBuffer[Double]()
   private val burnFrequency: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
+  private val fireAge: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
   private val socket: Option[Socket] = if (Settings.SOCKET_ENABLED) Some(
     new Socket(Settings.SOCKET_HOST, Settings.SOCKET_PORT)
   ) else None
@@ -74,6 +75,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
       case Layer.FIRE_PROBABILITY => "Fire probability"
       case Layer.GROWTH_PROBABILITY => "Growth probability"
       case Layer.HUMIDITY => "Humidity"
+      case Layer.FIRE_AGE => "Fire age"
     }))
 
     g.drawFPS()
@@ -86,11 +88,17 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
           math.max(max2, cell.timesBurnt)
         })
       })
+      val maxFireAge: Double = world.grid.foldLeft(0)((max, row) => {
+        row.foldLeft(max)((max2, cell) => {
+          math.max(max2, cell.fireAge)
+        })
+      })
       world.grid.zipWithIndex.foreach(p1 => {
         val y: Int = p1._2
         p1._1.zipWithIndex.foreach(p2 => {
           val x: Int = p2._2
           burnFrequency(y)(x) = p2._1.timesBurnt / maxBurns
+          fireAge(y)(x) = p2._1.fireAge / 100.0
         })
       })
       logFireDensity()
@@ -160,6 +168,12 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
       case Layer.HUMIDITY => {
         lerpColor(Color.WHITE, Color.BLUE, cell.properties.humidity)
       }
+      case Layer.FIRE_AGE => {
+        cell.state match {
+          case State.FIRE => lerpColor(Color.GRAY, Color.RED, fireAge(y)(x))
+          case _ => Color.BLACK
+        }
+      }
     }
   }
 
@@ -173,6 +187,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
     else if (keycode == Keys.NUM_3 || keycode == Keys.F) {layer = Layer.FIRE_PROBABILITY}
     else if (keycode == Keys.NUM_4 || keycode == Keys.G) {layer = Layer.GROWTH_PROBABILITY}
     else if (keycode == Keys.NUM_5 || keycode == Keys.H) {layer = Layer.HUMIDITY}
+    else if (keycode == Keys.NUM_6 || keycode == Keys.A) {layer = Layer.FIRE_AGE}
     else if (keycode == Keys.E) {exportStats()}
     else if (keycode == Keys.SPACE) {fast = !fast}
   }

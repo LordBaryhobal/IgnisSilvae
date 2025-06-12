@@ -3,17 +3,22 @@ package core
 import core.Cell.Properties
 import core.State.State
 
-case class Cell(state: State, properties: Properties, timesBurnt: Int = 0) {
+case class Cell(state: State, properties: Properties, timesBurnt: Int = 0, fireAge: Int = 0) {
   def step(neighbors: List[(Int, Cell)]): Cell = {
     val props2: Properties = neighbors.foldLeft(getBaseProperties)(influenceProps)
+    val nbFireAge: Int = neighbors.foldLeft(0)((a, b) => math.max(a, b._2.fireAge))
 
     state match {
       case State.ALIVE if Math.random() < props2.fireProbability =>
-        Cell(State.FIRE, Properties(0, 0, props2.humidity), timesBurnt + 1)
+        Cell(State.FIRE, Properties(0, 0, props2.humidity), timesBurnt + 1, nbFireAge + 1)
       case State.FIRE =>
-        Cell(State.DEAD, Properties(0.1, props2.growthProbability, props2.humidity), timesBurnt)
-      case State.DEAD if Math.random() < props2.growthProbability =>
-        Cell(State.ALIVE, Properties(props2.fireProbability, 0, props2.humidity), timesBurnt)
+        Cell(State.DEAD, Properties(0, props2.growthProbability, props2.humidity), timesBurnt)
+      case State.DEAD if Math.random() < props2.growthProbability / 5 =>
+        Cell(State.ALIVE, Properties(
+          Math.max(0, props2.fireProbability - Settings.GROWTH_FIRE_DECREASE),
+          0,
+          Math.min(1, props2.humidity + Settings.GROWTH_HUMIDITY_INCREASE)
+        ), timesBurnt)
       case _ => Cell(state, props2, timesBurnt)
     }
   }
@@ -38,8 +43,9 @@ case class Cell(state: State, properties: Properties, timesBurnt: Int = 0) {
       if (state == State.ALIVE && nb.state == State.FIRE) {Settings.NB_FIRE_INFLUENCE}
       else {0}
     )
-    val growthProbability = props.growthProbability - (
-      if (state == State.DEAD && nb.state == State.FIRE) {Settings.NB_FIRE_GROWTH_DECREASE}
+    val growthProbability = props.growthProbability + (
+      if (state == State.DEAD && nb.state == State.FIRE) {-Settings.NB_FIRE_GROWTH_DECREASE}
+      else if (state == State.DEAD && nb.state == State.ALIVE) {Settings.NB_ALIVE_GROWTH_INCREASE}
       else {0}
     )
     val humidity = props.humidity + (nb.properties.humidity - properties.humidity) * Settings.NB_HUMIDITY_INFLUENCE + (

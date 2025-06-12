@@ -25,25 +25,34 @@ object Settings {
   // +--------------+
 
   /** Fire probability decrease as a ratio of current humidity */
-  val BASE_HUMIDITY_FIRE_DECREASE: Double = 0.4
+  val BASE_HUMIDITY_FIRE_DECREASE: Double = 0.6
 
   /** Growth probability increase as a ratio of current humidity */
-  val BASE_HUMIDITY_GROWTH_INCREASE: Double = 0.01
+  val BASE_HUMIDITY_GROWTH_INCREASE: Double = 0.001
 
   /** Additional fire probability per neighbor on fire */
   val NB_FIRE_INFLUENCE: Double = 0.2
 
   /** Growth probability decrease per neighbor on fire */
-  val NB_FIRE_GROWTH_DECREASE: Double = 0.2
+  val NB_FIRE_GROWTH_DECREASE: Double = 0.6
 
   /** Humidity decrease per neighbor on fire */
-  val NB_FIRE_HUMIDITY_DECREASE: Double = 0.001
+  val NB_FIRE_HUMIDITY_DECREASE: Double = 0.01
 
   /** Humidity increase per neighbor as a ratio of the difference between the two cells */
   val NB_HUMIDITY_INFLUENCE: Double = 0.05
 
   /** Additional humidity increase per water neighbor */
   val NB_WATER_HUMIDITY_INCREASE: Double = 0.2
+
+  /** Growth probability increase per alive neighbor */
+  val NB_ALIVE_GROWTH_INCREASE: Double = 0.05
+
+  /** Fire probability decrease when a tree grows */
+  val GROWTH_FIRE_DECREASE: Double = 0.1
+
+  /** Humidity increase when a tree grows */
+  val GROWTH_HUMIDITY_INCREASE: Double = 0.01
 
   // +-----------------+
   // |  Miscellaneous  |
@@ -53,7 +62,7 @@ object Settings {
   val CELL_SIZE: Int = 4
 
   /** Whether to connect to the Python plotting socket */
-  val SOCKET_ENABLED: Boolean = false
+  val SOCKET_ENABLED: Boolean = true
 
   /** Host of the Python plotting socket */
   val SOCKET_HOST: String = ""
