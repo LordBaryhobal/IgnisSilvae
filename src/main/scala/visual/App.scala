@@ -193,12 +193,23 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
   }
 
   def logFireDensity(): Unit = {
-    val density: Double = world.getFireDensity
-    fireDensity.addOne(density)
+    val fireDensity: Double = world.getFireDensity
+    val treeDensity: Double = world.getTreeDensity
+    val meanAge: Double = world.getMeanFireAge
+    this.fireDensity.addOne(fireDensity)
+
+    val nBytes: Int = 4 + 8 + 8 + 8
 
     if (Settings.SOCKET_ENABLED) {
-      val buf: ByteBuffer = ByteBuffer.allocateDirect(12).putInt(step).putDouble(density).flip()
-      val arr: Array[Byte] = Array.fill(12)(0)
+      val buf: ByteBuffer = (
+        ByteBuffer.allocateDirect(nBytes)
+          .putInt(step)
+          .putDouble(fireDensity)
+          .putDouble(treeDensity)
+          .putDouble(meanAge)
+          .flip()
+      )
+      val arr: Array[Byte] = Array.fill(nBytes)(0)
       buf.get(arr)
       socketOut.get.write(arr)
       socketOut.get.flush()

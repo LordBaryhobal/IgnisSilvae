@@ -37,6 +37,23 @@ case class World(grid: List[List[Cell]], width: Int, height: Int) {
     } / (width * height).toDouble
   }
 
+  def getTreeDensity: Double = {
+    grid.foldLeft(0) {
+      (cnt, row) => row.foldLeft(cnt) {
+        (cnt2, cell) => if (cell.state == State.ALIVE) {cnt2 + 1} else cnt2
+      }
+    } / (width * height).toDouble
+  }
+
+  def getMeanFireAge: Double = {
+    val p: (Int, Int) = grid.foldLeft((0, 0)) {
+      (p, row) => row.foldLeft(p) {
+        (p2, cell) => if (cell.state == State.FIRE) {(p._1 + cell.fireAge, p._2 + 1)} else p2
+      }
+    }
+    return p._1 / p._2.toDouble
+  }
+
   def printStats(): Unit = {
     case class Stats(cnt: Int, fire: Double, growth: Double, humidity: Double)
     val stats: Stats = grid.foldLeft(Stats(0, 0, 0, 0)) {
