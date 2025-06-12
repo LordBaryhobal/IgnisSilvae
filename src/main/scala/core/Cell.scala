@@ -11,7 +11,7 @@ case class Cell(state: State, properties: Properties, timesBurnt: Int = 0) {
       case State.ALIVE if Math.random() < props2.fireProbability =>
         Cell(State.FIRE, Properties(0, 0, props2.humidity), timesBurnt + 1)
       case State.FIRE =>
-        Cell(State.DEAD, Properties(0, props2.growthProbability, props2.humidity), timesBurnt)
+        Cell(State.DEAD, Properties(0.1, props2.growthProbability, props2.humidity), timesBurnt)
       case State.DEAD if Math.random() < props2.growthProbability =>
         Cell(State.ALIVE, Properties(props2.fireProbability, 0, props2.humidity), timesBurnt)
       case _ => Cell(state, props2, timesBurnt)
@@ -44,6 +44,7 @@ case class Cell(state: State, properties: Properties, timesBurnt: Int = 0) {
     )
     val humidity = props.humidity + (nb.properties.humidity - properties.humidity) * Settings.NB_HUMIDITY_INFLUENCE + (
       if (nb.state == State.WATER) {Settings.NB_WATER_HUMIDITY_INCREASE}
+      else if (nb.state == State.FIRE) {-Settings.NB_FIRE_HUMIDITY_DECREASE}
       else {0}
     )
 
@@ -63,7 +64,7 @@ object Cell {
   }
 
   def random(): Cell = {
-    val state: State = if (Math.random() < 0.001) {
+    val state: State = if (Math.random() < Settings.INITIAL_FIRE_PROBABILITY) {
       State.FIRE
     } else {
       State.ALIVE

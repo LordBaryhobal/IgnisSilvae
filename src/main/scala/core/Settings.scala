@@ -12,26 +12,32 @@ object Settings {
   val WORLD_HEIGHT: Int = 100
 
   /** OpenSimplex noise feature size */
-  val SIMPLEX_FEATURE_SIZE: Double = 24.0
+  val SIMPLEX_FEATURE_SIZE: Double = 18.0
 
   /** Maximum noise value for water to generate */
   val WATER_THRESHOLD: Double = 0.2
+
+  /** Probability for each generated cell to start on fire */
+  val INITIAL_FIRE_PROBABILITY: Double = 0.0005
 
   // +--------------+
   // |  Simulation  |
   // +--------------+
 
   /** Fire probability decrease as a ratio of current humidity */
-  val BASE_HUMIDITY_FIRE_DECREASE: Double = 0.5
+  val BASE_HUMIDITY_FIRE_DECREASE: Double = 0.4
 
   /** Growth probability increase as a ratio of current humidity */
-  val BASE_HUMIDITY_GROWTH_INCREASE: Double = 0.1
+  val BASE_HUMIDITY_GROWTH_INCREASE: Double = 0.01
 
   /** Additional fire probability per neighbor on fire */
   val NB_FIRE_INFLUENCE: Double = 0.2
 
   /** Growth probability decrease per neighbor on fire */
-  val NB_FIRE_GROWTH_DECREASE: Double = 0.05
+  val NB_FIRE_GROWTH_DECREASE: Double = 0.2
+
+  /** Humidity decrease per neighbor on fire */
+  val NB_FIRE_HUMIDITY_DECREASE: Double = 0.001
 
   /** Humidity increase per neighbor as a ratio of the difference between the two cells */
   val NB_HUMIDITY_INFLUENCE: Double = 0.05
