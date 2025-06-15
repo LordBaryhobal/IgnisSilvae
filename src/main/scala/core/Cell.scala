@@ -1,85 +1,65 @@
 package core
 
-import core.Cell.Properties
 import core.State.State
 
-case class Cell(state: State, properties: Properties, timesBurnt: Int = 0, fireAge: Int = 0) {
+case class Cell(state: State, humidity: Double, timesBurnt: Int = 0, fireAge: Int = 0, fireProbability: Double = 0, growthProbability: Double = 0) {
   def step(neighbors: List[(Int, Cell)])(implicit settings: Settings): Cell = {
-    val props2: Properties = neighbors.foldLeft(getBaseProperties)(influenceProps).clamped
+    val cell2: Cell = this.copy(
+      humidity=(
+        if (state == State.WATER) 1
+        else Math.clamp(
+          humidity * (1 - settings.GLOBAL_HUMIDITY_DECREASE_RATE) + (
+            neighbors.map(p => p._2.humidity).sum / neighbors.length - humidity
+          ) * settings.HUMIDITY_PROPAGATION_RATE,
+          0, 1
+        )
+      ),
+      fireAge=0,
+      fireProbability=getFireProbability(neighbors),
+      growthProbability=getGrowthProbability(neighbors)
+    )
     val nbFireAge: Int = neighbors.foldLeft(0)((a, b) => math.max(a, b._2.fireAge))
 
     state match {
-      case State.ALIVE if Math.random() < props2.fireProbability =>
-        Cell(State.FIRE, Properties(0, 0, props2.humidity), timesBurnt + 1, nbFireAge + 1)
+      case State.ALIVE if Math.random() < cell2.fireProbability =>
+        cell2.copy(
+          state=State.FIRE,
+          humidity=Math.max(0, cell2.humidity - settings.BURN_HUMIDITY_DECREASE),
+          timesBurnt=timesBurnt + 1,
+          fireAge=nbFireAge + 1
+        )
       case State.FIRE =>
-        Cell(State.DEAD, Properties(0, props2.growthProbability, props2.humidity), timesBurnt)
-      case State.DEAD if Math.random() < props2.growthProbability / 5 =>
-        Cell(State.ALIVE, Properties(
-          Math.max(0, props2.fireProbability - settings.GROWTH_FIRE_DECREASE),
-          0,
-          Math.min(1, props2.humidity + settings.GROWTH_HUMIDITY_INCREASE)
-        ), timesBurnt)
-      case _ => Cell(state, props2, timesBurnt)
+        cell2.copy(state=State.DEAD)
+      case State.DEAD if Math.random() < cell2.growthProbability =>
+        cell2.copy(
+          state=State.ALIVE,
+          humidity=Math.min(1, cell2.humidity + settings.GROWTH_HUMIDITY_BOOST)
+        )
+      case _ => cell2
     }
   }
 
-  private def getBaseProperties(implicit settings: Settings): Properties = {
-    val fireProbability = properties.fireProbability - (
-      if (state == State.ALIVE) {properties.humidity * settings.BASE_HUMIDITY_FIRE_DECREASE}
-      else {0}
-    )
-    val growthProbability = properties.growthProbability + (
-      if (state == State.DEAD) {properties.humidity * settings.BASE_HUMIDITY_GROWTH_INCREASE}
-      else {0}
-    )
-    Properties(fireProbability, growthProbability, properties.humidity)
+  def getFireProbability(neighbors: List[(Int, Cell)])(implicit settings: Settings): Double = {
+    settings.FIRE_PROBABILITY_RATIO * (
+      neighbors.count(p => p._2.state == State.FIRE) + settings.FIRE_PROBABILITY_OFFSET
+    ) * Math.sqrt(1 - humidity)
   }
 
-  private def influenceProps(props: Properties, dirAndNb: (Int, Cell))(implicit settings: Settings): Properties = {
-    val dir: Int = dirAndNb._1
-    val nb: Cell = dirAndNb._2
-
-    val fireProbability = props.fireProbability + (
-      if (state == State.ALIVE && nb.state == State.FIRE) {settings.NB_FIRE_INFLUENCE}
-      else {0}
-    )
-    val growthProbability = props.growthProbability + (
-      if (state == State.DEAD && nb.state == State.FIRE) {-settings.NB_FIRE_GROWTH_DECREASE}
-      else if (state == State.DEAD && nb.state == State.ALIVE) {settings.NB_ALIVE_GROWTH_INCREASE}
-      else {0}
-    )
-    val humidity = props.humidity + (nb.properties.humidity - properties.humidity) * settings.NB_HUMIDITY_INFLUENCE + (
-      if (nb.state == State.WATER) {settings.NB_WATER_HUMIDITY_INCREASE}
-      else if (nb.state == State.FIRE) {-settings.NB_FIRE_HUMIDITY_DECREASE}
-      else {0}
-    )
-
-    return Properties(
-      fireProbability,
-      growthProbability,
-      humidity
-    )
+  def getGrowthProbability(neighbors: List[(Int, Cell)])(implicit settings: Settings): Double = {
+    settings.GROWTH_PROBABILITY_RATIO * (
+      neighbors.count(p => p._2.state == State.ALIVE) + settings.GROWTH_PROBABILITY_OFFSET
+    ) * Math.sqrt(humidity)
   }
 }
 
 object Cell {
-  case class Properties(fireProbability: Double, growthProbability: Double, humidity: Double) {
-    def clamped: Properties = {
-      return Properties(
-        Math.clamp(fireProbability, 0, 1),
-        Math.clamp(growthProbability, 0, 1),
-        Math.clamp(humidity, 0, 1)
-      )
-    }
-  }
-
   def random(implicit settings: Settings): Cell = {
     val state: State = if (Math.random() < settings.INITIAL_FIRE_PROBABILITY) {
       State.FIRE
     } else {
       State.ALIVE
     }
-    val humidity: Double = Math.random() * 0.3
-    return Cell(state, Properties(0, 0, humidity))
+    val humidity: Double = Math.random() * 0.1
+    return Cell(state, humidity)
   }
 }

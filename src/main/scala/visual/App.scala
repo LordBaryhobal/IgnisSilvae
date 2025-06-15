@@ -126,13 +126,15 @@ class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * s
         }
       }
       case Layer.FIRE_PROBABILITY => {
-        lerpColor(Color.GREEN, Color.RED, cell.properties.fireProbability)
+        if (cell.state == State.WATER) Color.BLUE
+        else lerpColor(Color.GREEN, Color.RED, cell.fireProbability)
       }
       case Layer.GROWTH_PROBABILITY => {
-        lerpColor(Color.GRAY, Color.GREEN, cell.properties.growthProbability)
+        if (cell.state == State.WATER) Color.BLUE
+        else lerpColor(Color.GRAY, Color.GREEN, cell.growthProbability)
       }
       case Layer.HUMIDITY => {
-        lerpColor(Color.WHITE, Color.BLUE, cell.properties.humidity)
+        lerpColor(Color.WHITE, Color.BLUE, cell.humidity)
       }
       case Layer.FIRE_AGE => {
         cell.state match {

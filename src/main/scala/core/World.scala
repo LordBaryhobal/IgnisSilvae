@@ -54,24 +54,6 @@ case class World(settings: Settings, grid: List[List[Cell]], width: Int, height:
     }
     return p._1 / p._2.toDouble
   }
-
-  def printStats(): Unit = {
-    case class Stats(cnt: Int, fire: Double, growth: Double, humidity: Double)
-    val stats: Stats = grid.foldLeft(Stats(0, 0, 0, 0)) {
-      (stats1, row) => row.foldLeft(stats1) {
-        (stats2, cell) => Stats(
-          stats2.cnt + 1,
-          stats2.fire + cell.properties.fireProbability,
-          stats2.growth + cell.properties.growthProbability,
-          stats2.humidity + cell.properties.humidity
-        )
-      }
-    }
-
-    //println(s"Mean fire probability: ${stats.fire / stats.cnt * 100} %")
-    //println(s"Mean growth probability: ${stats.growth / stats.cnt * 100} %")
-    //println(s"Mean humidity: ${stats.humidity / stats.cnt * 100} %")
-  }
 }
 
 
@@ -106,7 +88,7 @@ object World {
           if (value > settings.WATER_THRESHOLD) {
             Cell.random(settings)
           } else {
-            Cell(State.WATER, Cell.Properties(0, 0, 1))
+            Cell(State.WATER, 1)
           }
         }
       ).toList

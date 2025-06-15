@@ -34,7 +34,6 @@ class Simulation(val settings: Settings) {
 
   def step(): Unit = {
     world = world.step()
-    world.printStats()
     val maxBurns: Double = world.grid.foldLeft(0)((max, row) => {
       row.foldLeft(max)((max2, cell) => {
         math.max(max2, cell.timesBurnt)
@@ -121,13 +120,16 @@ object Simulation {
   def main(args: Array[String]): Unit = {
     val t0: Long = System.currentTimeMillis()
     //List(0.001, 0.002, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.05, 0.1).zipWithIndex.par.foreach(p => {
-    List.range(0, 32).par.foreach(i => {
-      val value: Double = 0.0005 + i * 0.00065
+    val vMin: Double = 0.1
+    val vMax: Double = 0.4
+    val n: Int = 32
+    List.range(0, n).par.foreach(i => {
+      val value: Double = vMin + (vMax - vMin) * i / (n - 1)
       val settings: Settings = new Settings()
-      settings.NB_FIRE_HUMIDITY_DECREASE = value
-      println(s"NB_FIRE_HUMIDITY_DECREASE = ${settings.NB_FIRE_HUMIDITY_DECREASE}")
+      settings.FIRE_PROBABILITY_RATIO = value
+      println(s"FIRE_PROBABILITY_RATIO = ${settings.FIRE_PROBABILITY_RATIO}")
       val simulation: Simulation = runSimulation(settings, 1000)
-      simulation.exportStats(s"stats/fire_humidity_decrease/${i}.csv")
+      simulation.exportStats(s"stats/phi/${i}.csv")
     })
     val t1: Long = System.currentTimeMillis()
     println(s"Completed in ${(t1 - t0) / 1000.0}s")

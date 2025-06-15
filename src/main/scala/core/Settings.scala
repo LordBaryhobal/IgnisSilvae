@@ -24,35 +24,18 @@ class Settings {
   // |  Simulation  |
   // +--------------+
 
-  /** Fire probability decrease as a ratio of current humidity */
-  var BASE_HUMIDITY_FIRE_DECREASE: Double = 0.6
+  /** Global humidity decrease rate at each time step */
+  var GLOBAL_HUMIDITY_DECREASE_RATE: Double = 0.001
 
-  /** Growth probability increase as a ratio of current humidity */
-  var BASE_HUMIDITY_GROWTH_INCREASE: Double = 0.001
+  var HUMIDITY_PROPAGATION_RATE: Double = 0.4
 
-  /** Additional fire probability per neighbor on fire */
-  var NB_FIRE_INFLUENCE: Double = 0.2
+  var BURN_HUMIDITY_DECREASE: Double = 0.1
+  var GROWTH_HUMIDITY_BOOST: Double = 0.1
 
-  /** Growth probability decrease per neighbor on fire */
-  var NB_FIRE_GROWTH_DECREASE: Double = 0.6
-
-  /** Humidity decrease per neighbor on fire */
-  var NB_FIRE_HUMIDITY_DECREASE: Double = 0.01
-
-  /** Humidity increase per neighbor as a ratio of the difference between the two cells */
-  var NB_HUMIDITY_INFLUENCE: Double = 0.05
-
-  /** Additional humidity increase per water neighbor */
-  var NB_WATER_HUMIDITY_INCREASE: Double = 0.2
-
-  /** Growth probability increase per alive neighbor */
-  var NB_ALIVE_GROWTH_INCREASE: Double = 0.05
-
-  /** Fire probability decrease when a tree grows */
-  var GROWTH_FIRE_DECREASE: Double = 0.1
-
-  /** Humidity increase when a tree grows */
-  var GROWTH_HUMIDITY_INCREASE: Double = 0.01
+  var FIRE_PROBABILITY_OFFSET: Double = 0.0001  // Spontaneous fires
+  var FIRE_PROBABILITY_RATIO: Double = 0.24  // Fire propagation
+  var GROWTH_PROBABILITY_OFFSET: Double = 0.001  // Spontaneous growth
+  var GROWTH_PROBABILITY_RATIO: Double = 0.01  // Growth propagation
 
   // +-----------------+
   // |  Miscellaneous  |
