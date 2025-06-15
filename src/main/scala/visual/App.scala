@@ -6,27 +6,24 @@ import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.graphics.Pixmap.Format
 import com.badlogic.gdx.graphics.{Color, Pixmap, Texture}
 import com.badlogic.gdx.{Files, Gdx}
-import core.{Cell, Settings, Simulation, State, World}
+import core._
 import org.lwjgl.opengl.Display
 import visual.Layer.Layer
 
-import java.io.{FileOutputStream, OutputStream, PrintWriter}
-import java.net.Socket
 import java.nio.ByteBuffer
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 
-class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH, Settings.CELL_SIZE * Settings.WORLD_HEIGHT) {
+class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * settings.WORLD_WIDTH, settings.CELL_SIZE * settings.WORLD_HEIGHT) {
   private val TITLE: String = "IgnisSilvae"
   private val iconSizes: Array[Int] = Array(16, 32, 48, 64, 128, 256)
   System.setProperty("LWJGL_WM_CLASS", TITLE) // See https://github.com/LWJGL/lwjgl/issues/67
 
-  private val size = Settings.CELL_SIZE
+  private val size = settings.CELL_SIZE
 
   private val textures: mutable.Map[Color, Texture] = new mutable.HashMap()
 
-  private val sim: Simulation = new Simulation()
+  private val sim: Simulation = new Simulation(settings)
 
   private var layer: Layer = Layer.STATE
   private var i: Int = 1
@@ -166,6 +163,6 @@ object App {
   private var instance: App = _
 
   def main(args: Array[String]): Unit = {
-    instance = new App
+    instance = new App(new Settings())
   }
 }

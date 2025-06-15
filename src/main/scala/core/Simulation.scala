@@ -6,21 +6,23 @@ import java.nio.ByteBuffer
 import scala.collection.mutable.ArrayBuffer
 import scala.io.StdIn.readLine
 
-class Simulation {
-  private var world: World = World.make(Settings.WORLD_WIDTH, Settings.WORLD_HEIGHT)
+import scala.collection.parallel.CollectionConverters._
+
+class Simulation(val settings: Settings) {
+  private var world: World = World.make(settings)
   private val burnFrequency: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
   private val fireAge: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
-  private val socket: Option[Socket] = if (Settings.SOCKET_ENABLED) Some(
-    new Socket(Settings.SOCKET_HOST, Settings.SOCKET_PORT)
+  private val socket: Option[Socket] = if (settings.SOCKET_ENABLED) Some(
+    new Socket(settings.SOCKET_HOST, settings.SOCKET_PORT)
   ) else None
-  private val socketOut: Option[OutputStream] = if (Settings.SOCKET_ENABLED) Some(socket.get.getOutputStream) else None
+  private val socketOut: Option[OutputStream] = if (settings.SOCKET_ENABLED) Some(socket.get.getOutputStream) else None
   private var stepI: Int = 0
 
   private val history: ArrayBuffer[HistoryEntry] = new ArrayBuffer[HistoryEntry]()
   logStats()
 
   def stop(): Unit = {
-    if (Settings.SOCKET_ENABLED) {
+    if (settings.SOCKET_ENABLED) {
       socket.get.close()
     }
   }
@@ -63,7 +65,7 @@ class Simulation {
 
     val nBytes: Int = 4 + 8 + 8 + 8
 
-    if (Settings.SOCKET_ENABLED) {
+    if (settings.SOCKET_ENABLED) {
       val buf: ByteBuffer = (
         ByteBuffer.allocateDirect(nBytes)
           .putInt(stepI)
@@ -92,8 +94,8 @@ class Simulation {
 }
 
 object Simulation {
-  def runSimulation(maxSteps: Int = -1): Simulation = {
-    val simulation: Simulation = new Simulation
+  def runSimulation(settings: Settings, maxSteps: Int = -1): Simulation = {
+    val simulation: Simulation = new Simulation(settings)
     var running: Boolean = true
     val thread: Thread = new Thread(() => {
       while (running && (maxSteps == -1 || maxSteps > simulation.stepI)) {
@@ -117,11 +119,17 @@ object Simulation {
   }
 
   def main(args: Array[String]): Unit = {
-    List.range(0, 10).foreach(n => {
-      Settings.BASE_HUMIDITY_FIRE_DECREASE = n / 10.0
-      println(s"BASE_HUMIDITY_FIRE_DECREASE = ${Settings.BASE_HUMIDITY_FIRE_DECREASE}")
-      val simulation: Simulation = runSimulation(1000)
-      simulation.exportStats(s"stats_${n}.csv")
+    val t0: Long = System.currentTimeMillis()
+    //List(0.001, 0.002, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.05, 0.1).zipWithIndex.par.foreach(p => {
+    List.range(0, 32).par.foreach(i => {
+      val value: Double = 0.0005 + i * 0.00065
+      val settings: Settings = new Settings()
+      settings.NB_FIRE_HUMIDITY_DECREASE = value
+      println(s"NB_FIRE_HUMIDITY_DECREASE = ${settings.NB_FIRE_HUMIDITY_DECREASE}")
+      val simulation: Simulation = runSimulation(settings, 1000)
+      simulation.exportStats(s"stats/fire_humidity_decrease/${i}.csv")
     })
+    val t1: Long = System.currentTimeMillis()
+    println(s"Completed in ${(t1 - t0) / 1000.0}s")
   }
 }

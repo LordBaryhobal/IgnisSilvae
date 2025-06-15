@@ -4,7 +4,9 @@ import noise.OpenSimplexNoise
 
 import scala.util.Random
 
-case class World(grid: List[List[Cell]], width: Int, height: Int) {
+case class World(settings: Settings, grid: List[List[Cell]], width: Int, height: Int) {
+  implicit val simSettings: Settings = settings
+
   def getNeighbors(x: Int, y: Int): List[(Int, Cell)] = {
     World.OFFSETS_WITH_I.map {
       case ((dx, dy), dir) => {
@@ -25,7 +27,7 @@ case class World(grid: List[List[Cell]], width: Int, height: Int) {
         )
       ).toList
     ).toList
-    return World(grid2, width, height)
+    return World(settings, grid2, width, height)
   }
 
   def getFireDensity: Double = {
@@ -86,7 +88,9 @@ object World {
   )
   private val OFFSETS_WITH_I: List[((Int, Int), Int)] = OFFSETS.zipWithIndex
 
-  def make(width: Int, height: Int): World = {
+  def make(settings: Settings): World = {
+    val width: Int = settings.WORLD_WIDTH
+    val height: Int = settings.WORLD_HEIGHT
     val random: Random = new Random()
     val seed: Long = random.nextLong()
     val noise: OpenSimplexNoise = new OpenSimplexNoise(seed)
@@ -95,12 +99,12 @@ object World {
       for (y <- 0 until height) yield (
         for (x <- 0 until width) yield {
           val value: Double = (noise.eval(
-            x / Settings.SIMPLEX_FEATURE_SIZE,
-            y / Settings.SIMPLEX_FEATURE_SIZE,
+            x / settings.SIMPLEX_FEATURE_SIZE,
+            y / settings.SIMPLEX_FEATURE_SIZE,
             0.0
           ) + 1) / 2
-          if (value > Settings.WATER_THRESHOLD) {
-            Cell.random()
+          if (value > settings.WATER_THRESHOLD) {
+            Cell.random(settings)
           } else {
             Cell(State.WATER, Cell.Properties(0, 0, 1))
           }
@@ -109,6 +113,7 @@ object World {
     ).toList
 
     return World(
+      settings,
       grid,
       width,
       height
