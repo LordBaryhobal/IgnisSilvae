@@ -6,7 +6,7 @@ import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.graphics.Pixmap.Format
 import com.badlogic.gdx.graphics.{Color, Pixmap, Texture}
 import com.badlogic.gdx.{Files, Gdx}
-import core.{Cell, Settings, State, World}
+import core.{Cell, Settings, Simulation, State, World}
 import org.lwjgl.opengl.Display
 import visual.Layer.Layer
 
@@ -26,19 +26,12 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
 
   private val textures: mutable.Map[Color, Texture] = new mutable.HashMap()
 
-  private var world: World = World.make(Settings.WORLD_WIDTH, Settings.WORLD_HEIGHT)
-  private var i: Int = 1
+  private val sim: Simulation = new Simulation()
+
   private var layer: Layer = Layer.STATE
-  private val fireDensity: ArrayBuffer[Double] = new ArrayBuffer[Double]()
-  private val burnFrequency: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
-  private val fireAge: Array[Array[Double]] = Array.fill(world.height, world.width)(0)
-  private val socket: Option[Socket] = if (Settings.SOCKET_ENABLED) Some(
-    new Socket(Settings.SOCKET_HOST, Settings.SOCKET_PORT)
-  ) else None
-  private val socketOut: Option[OutputStream] = if (Settings.SOCKET_ENABLED) Some(socket.get.getOutputStream) else None
-  private var step: Int = 0
+  private var i: Int = 1
+
   private var fast: Boolean = false
-  logFireDensity()
 
   override def onInit(): Unit = {
     setTitle(TITLE)
@@ -46,13 +39,12 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
   }
 
   override def exit(): Unit = {
-    if (Settings.SOCKET_ENABLED) {
-      socket.get.close()
-    }
+    sim.stop()
     super.exit()
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
+    val world: World = sim.getWorld
     g.clear()
     val winWidth: Float = getWindowWidth
     val winHeight: Float = getWindowHeight
@@ -81,34 +73,11 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
     g.drawFPS()
 
     if (i == 0 || fast) {
-      world = world.step()
-      world.printStats()
-      val maxBurns: Double = world.grid.foldLeft(0)((max, row) => {
-        row.foldLeft(max)((max2, cell) => {
-          math.max(max2, cell.timesBurnt)
-        })
-      })
-      val maxFireAge: Double = world.grid.foldLeft(0)((max, row) => {
-        row.foldLeft(max)((max2, cell) => {
-          math.max(max2, cell.fireAge)
-        })
-      })
-      world.grid.zipWithIndex.foreach(p1 => {
-        val y: Int = p1._2
-        p1._1.zipWithIndex.foreach(p2 => {
-          val x: Int = p2._2
-          burnFrequency(y)(x) = p2._1.timesBurnt / maxBurns
-          fireAge(y)(x) = p2._1.fireAge / 100.0
-        })
-      })
-      logFireDensity()
-      step += 1
+      sim.step()
     }
-
     i += 1
     //i %= 60
     i %= 5
-
   }
 
   private def setIcons(paths: Array[String]): Unit = {
@@ -156,7 +125,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
       case Layer.TIMES_BURNT => {
         cell.state match {
           case State.WATER => Color.BLUE
-          case _ => lerpColor(Color.GREEN, Color.RED, burnFrequency(y)(x))
+          case _ => lerpColor(Color.GREEN, Color.RED, sim.getBurnFrequencyAt(x, y))
         }
       }
       case Layer.FIRE_PROBABILITY => {
@@ -170,7 +139,7 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
       }
       case Layer.FIRE_AGE => {
         cell.state match {
-          case State.FIRE => lerpColor(Color.GRAY, Color.RED, fireAge(y)(x))
+          case State.FIRE => lerpColor(Color.GRAY, Color.RED, sim.getFireAgeAt(x, y))
           case _ => Color.BLACK
         }
       }
@@ -188,40 +157,8 @@ class App extends PortableApplication(Settings.CELL_SIZE * Settings.WORLD_WIDTH,
     else if (keycode == Keys.NUM_4 || keycode == Keys.G) {layer = Layer.GROWTH_PROBABILITY}
     else if (keycode == Keys.NUM_5 || keycode == Keys.H) {layer = Layer.HUMIDITY}
     else if (keycode == Keys.NUM_6 || keycode == Keys.A) {layer = Layer.FIRE_AGE}
-    else if (keycode == Keys.E) {exportStats()}
+    else if (keycode == Keys.E) {sim.exportStats()}
     else if (keycode == Keys.SPACE) {fast = !fast}
-  }
-
-  def logFireDensity(): Unit = {
-    val fireDensity: Double = world.getFireDensity
-    val treeDensity: Double = world.getTreeDensity
-    val meanAge: Double = world.getMeanFireAge
-    this.fireDensity.addOne(fireDensity)
-
-    val nBytes: Int = 4 + 8 + 8 + 8
-
-    if (Settings.SOCKET_ENABLED) {
-      val buf: ByteBuffer = (
-        ByteBuffer.allocateDirect(nBytes)
-          .putInt(step)
-          .putDouble(fireDensity)
-          .putDouble(treeDensity)
-          .putDouble(meanAge)
-          .flip()
-      )
-      val arr: Array[Byte] = Array.fill(nBytes)(0)
-      buf.get(arr)
-      socketOut.get.write(arr)
-      socketOut.get.flush()
-    }
-  }
-
-  def exportStats(): Unit = {
-    val writer: PrintWriter = new PrintWriter(new FileOutputStream("fire_density.csv"))
-    fireDensity.foreach(d => {
-      writer.println(d)
-    })
-    writer.close()
   }
 }
 

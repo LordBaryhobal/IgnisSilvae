@@ -25,7 +25,7 @@ object Settings {
   // +--------------+
 
   /** Fire probability decrease as a ratio of current humidity */
-  val BASE_HUMIDITY_FIRE_DECREASE: Double = 0.6
+  var BASE_HUMIDITY_FIRE_DECREASE: Double = 0.6
 
   /** Growth probability increase as a ratio of current humidity */
   val BASE_HUMIDITY_GROWTH_INCREASE: Double = 0.001
@@ -62,7 +62,7 @@ object Settings {
   val CELL_SIZE: Int = 4
 
   /** Whether to connect to the Python plotting socket */
-  val SOCKET_ENABLED: Boolean = true
+  val SOCKET_ENABLED: Boolean = false
 
   /** Host of the Python plotting socket */
   val SOCKET_HOST: String = ""
