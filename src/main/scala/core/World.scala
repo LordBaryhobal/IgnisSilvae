@@ -1,21 +1,20 @@
 package core
 
-import core.World.dirFromOffset
 import noise.OpenSimplexNoise
 
 import scala.util.Random
 
 case class World(grid: List[List[Cell]], width: Int, height: Int) {
   def getNeighbors(x: Int, y: Int): List[(Int, Cell)] = {
-    (for (
-      y2 <- y - 1 to y + 1;
-      x2 <- x - 1 to x + 1
-      if y2 >= 0 && y2 < height
-      if x2 >= 0 && x2 < width
-      if x2 != x || y2 != y
-    ) yield {
-      (dirFromOffset(x2-x, y2-y), grid(y2)(x2))
-    }).toList
+    World.OFFSETS_WITH_I.map {
+      case ((dx, dy), dir) => {
+        val x2 = x + dx
+        val y2 = y + dy
+        if (x2 >= 0 && x2 < width && y2 >= 0 && y2 < height) {
+          Some((dir, grid(y2)(x2)))
+        } else None
+      }
+    }.filterNot(n => n.isEmpty).map(n => n.get)
   }
 
   def step(): World = {
@@ -75,7 +74,7 @@ case class World(grid: List[List[Cell]], width: Int, height: Int) {
 
 
 object World {
-  val OFFSETS: List[(Int, Int)] = List(
+  private val OFFSETS: List[(Int, Int)] = List(
     (-1, -1),
     ( 0, -1),
     ( 1, -1),
@@ -85,6 +84,7 @@ object World {
     ( 0,  1),
     ( 1,  1)
   )
+  private val OFFSETS_WITH_I: List[((Int, Int), Int)] = OFFSETS.zipWithIndex
 
   def make(width: Int, height: Int): World = {
     val random: Random = new Random()
@@ -113,9 +113,5 @@ object World {
       width,
       height
     )
-  }
-
-  def dirFromOffset(dx: Int, dy: Int): Int = {
-    OFFSETS.indexOf((dx, dy))
   }
 }

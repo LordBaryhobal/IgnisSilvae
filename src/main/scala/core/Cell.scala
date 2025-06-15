@@ -5,7 +5,7 @@ import core.State.State
 
 case class Cell(state: State, properties: Properties, timesBurnt: Int = 0, fireAge: Int = 0) {
   def step(neighbors: List[(Int, Cell)]): Cell = {
-    val props2: Properties = neighbors.foldLeft(getBaseProperties)(influenceProps)
+    val props2: Properties = neighbors.foldLeft(getBaseProperties)(influenceProps).clamped
     val nbFireAge: Int = neighbors.foldLeft(0)((a, b) => math.max(a, b._2.fireAge))
 
     state match {
@@ -55,17 +55,21 @@ case class Cell(state: State, properties: Properties, timesBurnt: Int = 0, fireA
     )
 
     return Properties(
-      Math.clamp(fireProbability, 0, 1),
-      Math.clamp(growthProbability, 0, 1),
-      Math.clamp(humidity, 0, 1)
+      fireProbability,
+      growthProbability,
+      humidity
     )
   }
 }
 
 object Cell {
   case class Properties(fireProbability: Double, growthProbability: Double, humidity: Double) {
-    def setHumidity(humidity: Double): Properties = {
-      Properties(fireProbability, growthProbability, humidity)
+    def clamped: Properties = {
+      return Properties(
+        Math.clamp(fireProbability, 0, 1),
+        Math.clamp(growthProbability, 0, 1),
+        Math.clamp(humidity, 0, 1)
+      )
     }
   }
 
