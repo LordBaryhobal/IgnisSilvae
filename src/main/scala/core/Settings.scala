@@ -33,9 +33,11 @@ class Settings {
   var GROWTH_HUMIDITY_BOOST: Double = 0.1
 
   var FIRE_PROBABILITY_OFFSET: Double = 0.0001  // Spontaneous fires
-  var FIRE_PROBABILITY_RATIO: Double = 0.24  // Fire propagation
+  var FIRE_PROBABILITY_RATIO: Double = 0.2  // Fire propagation
   var GROWTH_PROBABILITY_OFFSET: Double = 0.001  // Spontaneous growth
   var GROWTH_PROBABILITY_RATIO: Double = 0.01  // Growth propagation
+
+  var WIND_SPEED: Double = 1
 
   // +-----------------+
   // |  Miscellaneous  |

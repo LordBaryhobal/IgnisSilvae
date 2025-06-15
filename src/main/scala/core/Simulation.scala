@@ -120,16 +120,16 @@ object Simulation {
   def main(args: Array[String]): Unit = {
     val t0: Long = System.currentTimeMillis()
     //List(0.001, 0.002, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.05, 0.1).zipWithIndex.par.foreach(p => {
-    val vMin: Double = 0.1
-    val vMax: Double = 0.4
+    val vMin: Double = 0
+    val vMax: Double = 1
     val n: Int = 32
     List.range(0, n).par.foreach(i => {
       val value: Double = vMin + (vMax - vMin) * i / (n - 1)
       val settings: Settings = new Settings()
-      settings.FIRE_PROBABILITY_RATIO = value
-      println(s"FIRE_PROBABILITY_RATIO = ${settings.FIRE_PROBABILITY_RATIO}")
+      settings.WIND_SPEED = value
+      println(s"WIND_SPEED = ${settings.WIND_SPEED}")
       val simulation: Simulation = runSimulation(settings, 1000)
-      simulation.exportStats(s"stats/phi/${i}.csv")
+      simulation.exportStats(s"stats/omega/${i}.csv")
     })
     val t1: Long = System.currentTimeMillis()
     println(s"Completed in ${(t1 - t0) / 1000.0}s")

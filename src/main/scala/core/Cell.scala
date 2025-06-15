@@ -41,7 +41,18 @@ case class Cell(state: State, humidity: Double, timesBurnt: Int = 0, fireAge: In
 
   def getFireProbability(neighbors: List[(Int, Cell)])(implicit settings: Settings): Double = {
     settings.FIRE_PROBABILITY_RATIO * (
-      neighbors.count(p => p._2.state == State.FIRE) + settings.FIRE_PROBABILITY_OFFSET
+      neighbors.map(p => if (p._2.state == State.FIRE) {
+        Math.pow(
+          p._1 match {
+            case 4 => 0.5
+            case 2 | 7 => 0.75
+            case 0 | 5 => 1.5
+            case 3 => 2
+            case _ => 1
+          },
+          settings.WIND_SPEED
+        )
+      } else 0).sum + settings.FIRE_PROBABILITY_OFFSET
     ) * Math.sqrt(1 - humidity)
   }
 
