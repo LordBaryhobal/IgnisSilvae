@@ -73,7 +73,6 @@ class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * s
       sim.step()
     }
     i += 1
-    //i %= 60
     i %= 5
   }
 

@@ -1,12 +1,14 @@
 package core
 
 import java.io.{FileOutputStream, OutputStream, PrintWriter}
+import java.lang.reflect.Field
 import java.net.Socket
 import java.nio.ByteBuffer
+import java.nio.file.{Files, Path, Paths}
+import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable.ArrayBuffer
-import scala.io.StdIn.readLine
-
 import scala.collection.parallel.CollectionConverters._
+import scala.io.StdIn.readLine
 
 class Simulation(val settings: Settings) {
   private var world: World = World.make(settings)
@@ -37,11 +39,6 @@ class Simulation(val settings: Settings) {
     val maxBurns: Double = world.grid.foldLeft(0)((max, row) => {
       row.foldLeft(max)((max2, cell) => {
         math.max(max2, cell.timesBurnt)
-      })
-    })
-    val maxFireAge: Double = world.grid.foldLeft(0)((max, row) => {
-      row.foldLeft(max)((max2, cell) => {
-        math.max(max2, cell.fireAge)
       })
     })
     world.grid.zipWithIndex.foreach(p1 => {
@@ -83,9 +80,9 @@ class Simulation(val settings: Settings) {
   def exportStats(path: String = "stats.csv"): Unit = {
     val writer: PrintWriter = new PrintWriter(new FileOutputStream(path))
     writer.println("step,fire_density,tree_density,fire_age")
-    history.zipWithIndex.foreach(p => {
-      writer.println(s"${p._2},${p._1.fireDensity},${p._1.treeDensity},${p._1.fireAge}")
-    })
+    history.zipWithIndex.foreach { case (entry, i) =>
+      writer.println(s"$i,${entry.fireDensity},${entry.treeDensity},${entry.fireAge}")
+    }
     writer.close()
   }
 
@@ -93,45 +90,72 @@ class Simulation(val settings: Settings) {
 }
 
 object Simulation {
-  def runSimulation(settings: Settings, maxSteps: Int = -1): Simulation = {
+  private def runSimulation(settings: Settings, maxSteps: Int = -1, debug: Boolean = true): Simulation = {
     val simulation: Simulation = new Simulation(settings)
     var running: Boolean = true
     val thread: Thread = new Thread(() => {
       while (running && (maxSteps == -1 || maxSteps > simulation.stepI)) {
-        print(s"\rStep ${simulation.stepI}")
+        if (debug) print(s"\rStep ${simulation.stepI}")
         simulation.step()
       }
       simulation.stop()
     })
-    println("Starting simulation")
-    if (maxSteps == -1) println("Press ENTER to stop")
+    if (debug) {
+      println("Starting simulation")
+      if (maxSteps == -1) println("Press ENTER to stop")
+    }
     thread.start()
 
     if (maxSteps == -1) {
       readLine()
-      println()
-      println("Stopping simulation")
+      if (debug) {
+        println()
+        println("Stopping simulation")
+      }
       running = false
     }
     thread.join()
     return simulation
   }
 
-  def main(args: Array[String]): Unit = {
+  private def multiSimulation(settings: Settings,
+                              setting: String,
+                              vMin: Double,
+                              vMax: Double,
+                              samples: Int,
+                              maxSteps: Int,
+                              outputDir: Path): Unit = {
+
+    if (Files.notExists(outputDir)) Files.createDirectory(outputDir)
+
+    val finished: AtomicInteger = new AtomicInteger(0)
+
     val t0: Long = System.currentTimeMillis()
-    //List(0.001, 0.002, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.05, 0.1).zipWithIndex.par.foreach(p => {
-    val vMin: Double = 0.1
-    val vMax: Double = 0.4
-    val n: Int = 32
-    List.range(0, n).par.foreach(i => {
-      val value: Double = vMin + (vMax - vMin) * i / (n - 1)
-      val settings: Settings = new Settings()
-      settings.FIRE_PROBABILITY_RATIO = value
-      println(s"FIRE_PROBABILITY_RATIO = ${settings.FIRE_PROBABILITY_RATIO}")
-      val simulation: Simulation = runSimulation(settings, 1000)
-      simulation.exportStats(s"stats/phi/${i}.csv")
+    List.range(0, samples).par.foreach(i => {
+      val value: Double = vMin + (vMax - vMin) * i / (samples - 1)
+      val settings2: Settings = settings.copy
+      val field: Field = settings2.getClass.getDeclaredField(setting)
+      field.setAccessible(true)
+      field.setDouble(settings2, value)
+      println(s"Starting simulation $i ($setting = $value)")
+      val simulation: Simulation = runSimulation(settings2, maxSteps, debug=false)
+      val path: Path = Paths.get(outputDir.toString, s"$i.csv")
+      simulation.exportStats(path.toString)
+      println(s"Simulation $i has finished (${finished.incrementAndGet()} / $samples)")
     })
     val t1: Long = System.currentTimeMillis()
     println(s"Completed in ${(t1 - t0) / 1000.0}s")
+  }
+
+  def main(args: Array[String]): Unit = {
+    multiSimulation(
+      new Settings(),
+      "FIRE_PROBABILITY_RATIO",
+      0,
+      1,
+      64,
+      1000,
+      Paths.get("stats/fire_probability_ratio")
+    )
   }
 }
