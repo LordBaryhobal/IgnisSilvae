@@ -16,14 +16,13 @@ def rolling_mean(a: np.ndarray, win_size: int):
 
 def main():
     # Use a non-blocking backend for live plotting
-    matplotlib.use('TkAgg')  # or 'Qt5Agg' if you have PyQt5
+    matplotlib.use('Qt5Agg')  # or 'Qt5Agg' if you have PyQt5
     plt.ion()
     
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
     
     # Set up the plots
-    #ax.set_ylim((0, 1))
     ax.set_xlabel("Step")
     ax.set_ylabel("Ratio of total area on fire")
     ax2.set_ylabel("Mean age")
@@ -63,6 +62,8 @@ def main():
                     data = conn.recv(n_bytes)
                     if len(data) == n_bytes:
                         i, fire_density, tree_density, mean_age = struct.unpack(">Iddd", data)
+                        if np.isnan(mean_age):
+                            mean_age = 0
                         indices.append(i)
                         fire_densities.append(fire_density)
                         tree_densities.append(tree_density)
@@ -78,16 +79,22 @@ def main():
                                 
                                 # Adjust x-axis limits to fit new data
                                 if indices:
-                                    ax.set_xlim(min(indices), max(indices))
-                                    ax2.set_xlim(min(indices), max(indices))
+                                    mn, mx = min(indices), max(indices)
+                                    print("A", mn, mx)
+                                    ax.set_xlim(mn, mx)
+                                    ax2.set_xlim(mn, mx)
                                 
                                 # Adjust y-axis limits if needed
                                 if fire_densities and tree_densities:
-                                    ax.set_ylim(0, max(fire_densities + tree_densities) * 1.1)
+                                    mn, mx = 0, max(fire_densities + tree_densities) * 1.1
+                                    print("B", mn, mx)
+                                    ax.set_ylim(mn, mx)
                                 if ages:
-                                    ax2.set_ylim(0, max(ages) * 1.1)
+                                    mn, mx = 0, max(ages) * 1.1
+                                    print("C", mn, mx)
+                                    ax2.set_ylim(mn, mx)
 
-                                average = rolling_mean(ages, 100)
+                                average = rolling_mean(np.array(ages), 100)
                                 if average.shape[0] == len(indices):
                                     line4.set_data(indices, average)
                             
