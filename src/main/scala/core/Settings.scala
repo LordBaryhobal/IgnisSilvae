@@ -48,8 +48,6 @@ class Settings {
   /** Growth probability coefficient, aka. growth susceptibility */
   var GROWTH_PROBABILITY_RATIO: Double = 0.01  // Growth propagation
 
-  var WIND_SPEED: Double = 0
-
   // +-----------------+
   // |  Miscellaneous  |
   // +-----------------+
