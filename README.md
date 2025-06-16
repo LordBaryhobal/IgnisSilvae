@@ -85,3 +85,14 @@ A tree also has a small probability of spontaneously growing without any alive n
     <img src="assets/model_4.png" width="600" />
     <p align="center">Fig. 4 - Growth probability computation</p>
 </p>
+
+# Analysis
+
+When varying the $\varphi$ parameter, a phase transition can be observed by looking at the mean tree coverage.
+While it starts in a stable state neart 100% tree coverage for a small $\varphi$ value, it then drops in a transition phase.
+A second stable phase then takes place near 1% tree coverage for high value of $\varphi$.
+
+<p align="center">
+    <img src="assets/transition.png" width="600" />
+    <p align="center">Fig. 5 - Phase transition of the mean tree coverage</p>
+</p>
