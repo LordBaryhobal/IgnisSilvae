@@ -51,37 +51,37 @@ When running the visualization, you can use the following controls:
 Each cell of the automaton has a state (alive, on fire, dead or water, for lakes), and a humidity level.
 This state and humidity update on each time step, for all cells, according to the following rules and formulae.
 
-<figure style="text-align: center">
+<p align="center">
     <img src="assets/model_1.png" width="600" />
-    <figcaption>Fig. 1 - Finite state machine</figcaption>
-</figure>
+    <p align="center">Fig. 1 - Finite state machine</p>
+</p>
 
 ---
 
 Humidity is propagated across neighbors, and is globally decreased at each time step.
 This is done to counterbalance the infinite humidity sources formed by lakes.
 
-<figure style="text-align: center">
+<p align="center">
     <img src="assets/model_2.png" width="600" />
-    <figcaption>Fig. 2 - Humidity evolution</figcaption>
-</figure>
+    <p align="center">Fig. 2 - Humidity evolution</p>
+</p>
 
 ---
 
 The probability of an alive cell catching fire is determined by the number of neighbors on fire and its own dryness.
 A tree also has a small probability of spontaneously catching fire without any neighbor on fire.
 
-<figure style="text-align: center">
+<p align="center">
     <img src="assets/model_3.png" width="600" />
-    <figcaption>Fig. 3 - Fire probability computation</figcaption>
-</figure>
+    <p align="center">Fig. 3 - Fire probability computation</p>
+</p>
 
 ---
 
 The probability of a dead cell growing back is determined by the number of alive neighbors and its own humidity.
 A tree also has a small probability of spontaneously growing without any alive neighbor.
 
-<figure style="text-align: center">
+<p align="center">
     <img src="assets/model_4.png" width="600" />
-    <figcaption>Fig. 4 - Growth probability computation</figcaption>
-</figure>
+    <p align="center">Fig. 4 - Growth probability computation</p>
+</p>
