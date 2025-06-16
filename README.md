@@ -15,6 +15,7 @@ This project is part of the 204.2 Computational Physics and 205.1 Functional Pro
   * [Installation](#installation)
   * [Controls](#controls)
 * [Model](#model)
+* [Analysis](#analysis)
 <!-- TOC -->
 
 ---
