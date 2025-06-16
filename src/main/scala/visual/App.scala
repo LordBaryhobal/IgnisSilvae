@@ -45,7 +45,6 @@ class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * s
     g.clear()
     val winWidth: Float = getWindowWidth
     val winHeight: Float = getWindowHeight
-    //val size: Float = Math.min(winWidth / world.width, winHeight / world.height)
     val ox: Float = (winWidth - world.width * size) / 2
     val oy: Float = (winHeight - world.height * size) / 2
     world.grid.zipWithIndex.foreach(p1 => {
@@ -58,7 +57,8 @@ class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * s
       })
     })
 
-    g.drawString(0f, 800f, "Layer: " + (layer match {
+    g.setColor(Color.WHITE)
+    g.drawString(0f, getWindowHeight, "Layer: " + (layer match {
       case Layer.STATE => "State"
       case Layer.TIMES_BURNT => "Burn frequency"
       case Layer.FIRE_PROBABILITY => "Fire probability"
@@ -131,7 +131,7 @@ class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * s
       }
       case Layer.GROWTH_PROBABILITY => {
         if (cell.state == State.WATER) Color.BLUE
-        else lerpColor(Color.GRAY, Color.GREEN, cell.growthProbability)
+        else lerpColors(List(Color.GRAY, Color.YELLOW, Color.GREEN, Color.BLUE), cell.growthProbability)
       }
       case Layer.HUMIDITY => {
         lerpColor(Color.WHITE, Color.BLUE, cell.humidity)
@@ -147,6 +147,14 @@ class App(settings: Settings) extends PortableApplication(settings.CELL_SIZE * s
 
   private def lerpColor(color1: Color, color2: Color, value: Double): Color = {
     color1.cpy().lerp(color2, math.round(value * 100).toFloat / 100)
+  }
+
+  private def lerpColors(colors: List[Color], value: Double): Color = {
+    val i: Int = ((colors.length - 1) * value).toInt
+    if (i == colors.length - 1) return colors(i)
+    val j: Int = i + 1
+    val value2: Double = value * (colors.length - 1) - i
+    colors(i).cpy().lerp(colors(j), math.round(value2 * 100).toFloat / 100)
   }
 
   override def onKeyDown(keycode: Int): Unit = {

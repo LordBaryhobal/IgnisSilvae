@@ -27,24 +27,35 @@ class Settings {
   /** Global humidity decrease rate at each time step */
   var GLOBAL_HUMIDITY_DECREASE_RATE: Double = 0.001
 
+  /** Rate of humidity propagation, aka. neighbor influence */
   var HUMIDITY_PROPAGATION_RATE: Double = 0.4
 
+  /** Humidity decrease when a cell catches fire */
   var BURN_HUMIDITY_DECREASE: Double = 0.1
+
+  /** Humidity increase when a cell grows */
   var GROWTH_HUMIDITY_BOOST: Double = 0.1
 
+  /** Additional "neighbor on fire" for spontaneous fires */
   var FIRE_PROBABILITY_OFFSET: Double = 0.0001  // Spontaneous fires
-  var FIRE_PROBABILITY_RATIO: Double = 0.2  // Fire propagation
+
+  /** Fire probability coefficient, aka. fire susceptibility */
+  var FIRE_PROBABILITY_RATIO: Double = 0.3  // Fire propagation
+
+  /** Additional "alive neighbor" for spontaneous growth */
   var GROWTH_PROBABILITY_OFFSET: Double = 0.001  // Spontaneous growth
+
+  /** Growth probability coefficient, aka. growth susceptibility */
   var GROWTH_PROBABILITY_RATIO: Double = 0.01  // Growth propagation
 
-  var WIND_SPEED: Double = 1
+  var WIND_SPEED: Double = 0
 
   // +-----------------+
   // |  Miscellaneous  |
   // +-----------------+
 
   /** Size of a cell in pixel */
-  val CELL_SIZE: Int = 4
+  val CELL_SIZE: Int = 10
 
   /** Whether to connect to the Python plotting socket */
   val SOCKET_ENABLED: Boolean = false
