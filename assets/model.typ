@@ -74,13 +74,14 @@
 #pagebreak()
 
 #equ-box(bg: blue.lighten(20%), fg: white)[Humidity][
-  $ H_(i+1) = H_i dot (1 - lambda) + ( 1 / N sum_"neighbors" H_n - H_i) * nu
+  $ H_(i+1) = H_i dot (1 - lambda) + ( 1 / N sum_"neighbors" H_n - H_i) dot nu
   + cases(
     gap: #0.6em,
     - & sigma quad & "if "#state-bx("Alive") -> #state-bx("Fire"),
       & eta quad & "if "#state-bx("Dead") -> #state-bx("Alive"),
       & 0 quad & "otherwise"
-  )
+  )\
+  H in [0, 1]
   $
   where $lambda = $ #setting("lambda")\
   and $nu = $ #setting("nu")\
